@@ -8,6 +8,7 @@ using API.DTO;
 using System.Collections.Generic;
 using AutoMapper;
 using API.errors;
+using API.Helpers;
 
 namespace API.Controllers
 {
@@ -28,11 +29,18 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<ProductsToReturnDto>>> GetProducts(){
+        public async Task<ActionResult<Paggination<ProductsToReturnDto>>> GetProducts([FromQuery]ProductSpecParams productParams){
 
-            var spec = new ProductsWithTypesAndBrandsSpecification();
+            var spec = new ProductsWithTypesAndBrandsSpecification(productParams);
+
+            var countSpec = new ProductWithFiltersForCountSpecification(productParams);
+
+            var totalItems = await _productsRepo.CountAsync(countSpec);
+
             var products = await _productsRepo.ListAsync(spec);
-            return Ok(_mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductsToReturnDto>>(products));
+
+            var data = _mapper.Map<IReadOnlyList<Product>, IReadOnlyList<ProductsToReturnDto>>(products);
+            return Ok(new Paggination<ProductsToReturnDto>(productParams.PageIndex, productParams.pageSize, totalItems, data));
         }
 
         [HttpGet("{id}")]
