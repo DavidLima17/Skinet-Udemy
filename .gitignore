@@ -4,3 +4,4 @@ appsettings.json
 *.db
 skinet.db-shm
 skinet.db-wal
+docker-compose.yml
