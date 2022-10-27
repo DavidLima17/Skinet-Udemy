@@ -4,6 +4,7 @@ using API.Helpers;
 using API.Middleware;
 using Core.Interfaces;
 using Infastructure.Data;
+using Infastructure.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -26,8 +27,13 @@ namespace API
         {
 
             services.AddControllers();
-            services.AddDbContext<StoreContext>( x => x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
-
+            services.AddDbContext<StoreContext>( x => 
+                x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
+            
+            services.AddDbContext<UserIdentityDbContext>( x => { 
+                x.UseSqlite(_config.GetConnectionString("IdentityConnection"));
+            });
+            
             services.AddSingleton<IConnectionMultiplexer>(c => {
                 var configuration = ConfigurationOptions.Parse(_config.GetConnectionString("Redis"),
                 true);
@@ -35,6 +41,8 @@ namespace API
             });
             
             services.AddApplicationServices();
+
+            services.AddIdentityServices(_config);
 
             services.AddSwaggerDocumentation();
 
@@ -70,6 +78,7 @@ namespace API
 
             app.UseCors("CorsPolicy");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseSwaggerDocumentation();
